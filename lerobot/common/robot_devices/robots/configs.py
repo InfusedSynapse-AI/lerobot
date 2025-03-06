@@ -607,8 +607,8 @@ class KinovaRobotConfig(RobotConfig):
     max_relative_target: int | None = None
 
     # Network Configuration
-    ip: str = "192.168.0.193"
-    port: int = 5555
+    ip: str = "192.168.8.10"
+    port: int = 10000
     username: str = "admin"
     password: str = "admin"
 
