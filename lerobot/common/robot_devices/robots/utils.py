@@ -61,10 +61,13 @@ def make_robot_from_config(config: RobotConfig):
         from lerobot.common.robot_devices.robots.mobile_manipulator import MobileManipulator
 
         return MobileManipulator(config)
-    else:
+    elif isinstance(config, StretchRobotConfig):
         from lerobot.common.robot_devices.robots.stretch import StretchRobot
 
         return StretchRobot(config)
+    else:
+        from lerobot.common.robot_devices.robots.kinova import KinovaRobotConfig
+        return KinovaRobotConfig(config)
 
 
 def make_robot(robot_type: str, **kwargs) -> Robot:

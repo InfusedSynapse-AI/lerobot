@@ -597,3 +597,34 @@ class LeKiwiRobotConfig(RobotConfig):
     )
 
     mock: bool = False
+
+@RobotConfig.register_subclass("kinova")
+@dataclass
+class KinovaRobotConfig(RobotConfig):
+    # `max_relative_target` limits the magnitude of the relative positional target vector for safety purposes.
+    # Set this to a positive scalar to have the same value for all motors, or a list that is the same length as
+    # the number of motors in your follower arms.
+    max_relative_target: int | None = None
+
+    # Network Configuration
+    ip: str = "192.168.0.193"
+    port: int = 5555
+    username: str = "admin"
+    password: str = "admin"
+
+    cameras: dict[str, CameraConfig] = field(
+        default_factory=lambda: {
+            "cam_exterior": IntelRealSenseCameraConfig(
+                serial_number=250122073394,
+                fps=30,
+                width=640,
+                height=480,
+            ),
+            "cam_wrist": IntelRealSenseCameraConfig(
+                serial_number=243522071790,
+                fps=30,
+                width=640,
+                height=480,
+            ),
+        }
+    )
