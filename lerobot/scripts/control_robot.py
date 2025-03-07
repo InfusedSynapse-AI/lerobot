@@ -258,7 +258,7 @@ def record(
 
     if not robot.is_connected:
         robot.connect()
-
+    print("start init keyboard listener")
     listener, events = init_keyboard_listener()
 
     # Execute a few seconds without recording to:
@@ -267,16 +267,17 @@ def record(
     # 3. place the cameras windows on screen
     enable_teleoperation = policy is None
     log_say("Warmup record", cfg.play_sounds)
+    print("start warmup record")
     warmup_record(robot, events, enable_teleoperation, cfg.warmup_time_s, cfg.display_cameras, cfg.fps)
-
+    print("start safety_stop")
     if has_method(robot, "teleop_safety_stop"):
         robot.teleop_safety_stop()
-
+    print("start recording")
     recorded_episodes = 0
     while True:
         if recorded_episodes >= cfg.num_episodes:
             break
-
+        print("start recording episode")
         log_say(f"Recording episode {dataset.num_episodes}", cfg.play_sounds)
         record_episode(
             robot=robot,

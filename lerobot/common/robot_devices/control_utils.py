@@ -43,7 +43,7 @@ def log_control_info(robot: Robot, dt_s, episode_index=None, frame_index=None, f
     log_dt("dt", dt_s)
 
     # TODO(aliberts): move robot-specific logs logic in robot.print_logs()
-    if not robot.robot_type.startswith("stretch"):
+    if not robot.robot_type.startswith(("stretch", "kinova")):
         for name in robot.leader_arms:
             key = f"read_leader_{name}_pos_dt_s"
             if key in robot.logs:
@@ -237,6 +237,7 @@ def control_loop(
 
     timestamp = 0
     start_episode_t = time.perf_counter()
+    print("start control loop")
     while timestamp < control_time_s:
         start_loop_t = time.perf_counter()
 
@@ -251,28 +252,33 @@ def control_loop(
                 # so action actually sent is saved in the dataset.
                 action = robot.send_action(pred_action)
                 action = {"action": action}
-
+        print("loop 1")
         if dataset is not None:
             frame = {**observation, **action, "task": single_task}
             dataset.add_frame(frame)
-
+        print("loop 2")
         if display_cameras and not is_headless():
             image_keys = [key for key in observation if "image" in key]
+            
             for key in image_keys:
+                print(f"{key} shape:", observation[key].shape)
+                print(f"{key} dtype:", observation[key].dtype)
                 cv2.imshow(key, cv2.cvtColor(observation[key].numpy(), cv2.COLOR_RGB2BGR))
-            cv2.waitKey(1)
-
+            cv2.waitKey(5000)
+            cv2.destroyAllWindows()
+        print("loop 3")
         if fps is not None:
             dt_s = time.perf_counter() - start_loop_t
             busy_wait(1 / fps - dt_s)
-
+        print("loop 4")
         dt_s = time.perf_counter() - start_loop_t
         log_control_info(robot, dt_s, fps=fps)
-
+        print("loop 5")
         timestamp = time.perf_counter() - start_episode_t
         if events["exit_early"]:
             events["exit_early"] = False
             break
+    print("end control loop")
 
 
 def reset_environment(robot, events, reset_time_s, fps):
