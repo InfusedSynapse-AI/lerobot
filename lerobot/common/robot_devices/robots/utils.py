@@ -66,8 +66,8 @@ def make_robot_from_config(config: RobotConfig):
 
         return StretchRobot(config)
     else:
-        from lerobot.common.robot_devices.robots.kinova import KinovaRobotConfig
-        return KinovaRobotConfig(config)
+        from lerobot.common.robot_devices.robots.kinova import KinovaRobot
+        return KinovaRobot(config)
 
 
 def make_robot(robot_type: str, **kwargs) -> Robot:

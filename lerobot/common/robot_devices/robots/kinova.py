@@ -118,7 +118,9 @@ class KinovaRobot:
         action_dict["action"] = action
         for name in self.cameras:
             obs_dict[f"observation.images.{name}"] = images[name]
-        
+            print("=" * 100)
+            print(obs_dict[f"observation.images.{name}"])
+            print("=" * 100)
         return obs_dict, action_dict
 
     def capture_observation(self):
