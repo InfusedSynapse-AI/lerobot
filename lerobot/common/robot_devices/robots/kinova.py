@@ -13,6 +13,7 @@ from kortex_api.autogen.messages import DeviceConfig_pb2, Session_pb2, Base_pb2
 import rospy
 import cv2
 from sensor_msgs.msg import JointState
+import threading
 
 class KinovaRobot:
     def __init__(
@@ -30,10 +31,15 @@ class KinovaRobot:
         self.max_gripper_width = 0.085 # GRIPPER_WIDTH_MAX
         self.max_gripper_joint = 0.79301 # GRIPPER_JOINT_MAX
         self.min_gripper_joint = 0.00698 # GRIPPER_JOINT_MIN
+        self.timeout_duration = 20 #seconds
 
         # connect ros
-        rospy.init_node("pi0", anonymous=True)
-        rospy.Subscriber(f"/{self.robot_name}/joint_states", JointState, self.robot_state_cb)
+        try:
+            rospy.init_node("pi0", anonymous=True)
+
+            rospy.Subscriber(f"/{self.robot_name}/joint_states", JointState, self.robot_state_cb)
+        except:
+            rospy.logerr("Failed to initialize KinovaV2")
     
     @property
     def camera_features(self) -> dict:
@@ -137,8 +143,8 @@ class KinovaRobot:
             return
 
         # TODO(rcadene): Add velocity and other info
-        gripper_position_ros = torch.tensor([self.qpos[-1]], dtype=torch.float32)
-        state = torch.cat((joint_states, gripper_position_ros), dim = 0)
+        gripper_position = torch.tensor([gripper_position], dtype=torch.float32)
+        state = torch.cat((joint_states, gripper_position), dim = 0)
         state_ros = torch.tensor(self.qpos, dtype=torch.float32)
         action = state
 
@@ -159,12 +165,9 @@ class KinovaRobot:
         action_dict["action"] = action
         for name in self.cameras:
             obs_dict[f"observation.images.{name}"] = images[name]
-            print("=" * 100)
-            print(obs_dict[f"observation.images.{name}"].shape)
-            print(obs_dict[f"observation.images.{name}"])
             save_img = cv2.cvtColor(obs_dict[f"observation.images.{name}"].numpy(), cv2.COLOR_RGB2BGR)
             cv2.imwrite(f"/home/cuhk/quebinbin/workspace/projects/lerobot/{name}.png", save_img)
-            print("=" * 100)
+    
         return obs_dict, action_dict
 
     def capture_observation(self):
@@ -197,8 +200,8 @@ class KinovaRobot:
 
         # Populate output dictionaries and format to pytorch
         obs_dict = {}
-        gripper_position_ros = torch.tensor([self.qpos[-1]])
-        state = torch.cat((joint_states, gripper_position_ros), dim = 0)
+        gripper_position = torch.tensor([gripper_position])
+        state = torch.cat((joint_states, gripper_position), dim = 0)
         state_ros = torch.tensor(self.qpos)
         obs_dict["observation.state"] = state
         obs_dict["observation.state_ros"] = state_ros
@@ -225,6 +228,76 @@ class KinovaRobot:
             self.cameras[name].disconnect()
 
         self.is_connected = False
+
+    def check_for_end_or_abort(self, e):
+        def check(notification, e = e):
+            print("EVENT : " + \
+                Base_pb2.ActionEvent.Name(notification.action_event))
+            if notification.action_event == Base_pb2.ACTION_END \
+            or notification.action_event == Base_pb2.ACTION_ABORT:
+                e.set()
+        return check
+
+    def move_to_target_joint_positions(self, target_joint_positions):
+        action = Base_pb2.Action()
+        action.name = ""
+        action.application_data = ""
+
+        actuator_count = self.arm.GetActuatorCount()
+        assert actuator_count.count == len(target_joint_positions)
+
+        # Place arm straight up
+        for joint_id in range(actuator_count.count):
+            joint_angle = action.reach_joint_angles.joint_angles.joint_angles.add()
+            joint_angle.joint_identifier = joint_id
+            joint_angle.value = target_joint_positions[joint_id]
+
+        e = threading.Event()
+        notification_handle = self.arm.OnNotificationActionTopic(
+            self.check_for_end_or_abort(e),
+            Base_pb2.NotificationOptions()
+        )
+        
+        self.arm.ExecuteAction(action)
+
+        # "Waiting for movement to finish ..."
+        finished = e.wait(self.timeout_duration)
+        self.arm.Unsubscribe(notification_handle)
+
+        if finished:
+            print("Angular movement completed")
+        else:
+            print("Timeout on action notification wait")
+        return finished
+
+    def move_to_target_gripper_position(self, target_gripper_position):
+        # Create the GripperCommand we will send
+        gripper_command = Base_pb2.GripperCommand()
+        gripper_command.mode = Base_pb2.GRIPPER_POSITION
+        finger = gripper_command.gripper.finger.add()
+        finger.finger_identifier = 1
+        finger.value = target_gripper_position
+        self.arm.SendGripperCommand(gripper_command)
+        
+    def send_action(self, action: torch.Tensor) -> torch.Tensor:
+        # TODO(aliberts): return ndarrays instead of torch.Tensors
+        if not self.is_connected:
+            raise ConnectionError()
+
+        joint_positions = action.tolist()[:-1]
+        gripper_position = action.tolist()[-1]
+
+        before_write_t = time.perf_counter()
+        self.move_to_target_joint_positions(joint_positions)
+        self.move_to_target_gripper_position(gripper_position)
+        self.logs["write_pos_dt_s"] = time.perf_counter() - before_write_t
+
+        # TODO(aliberts): return action_sent when motion is limited
+        return action
+        
+    def back_home(self):
+        home_positions = torch.tensor([359.996, 303.071, 359.996, 102.57, 0.001, 104.281, 270.048, 0.008])
+        self.send_action(home_positions)
 
     def __del__(self):
         if getattr(self, "is_connected", False):
