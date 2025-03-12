@@ -266,8 +266,8 @@ def record(
     # 3. place the cameras windows on screen
     enable_teleoperation = policy is None
     if robot.robot_type in ["kinova"]:
-        log_say("set environment", cfg.play_sounds)
-        robot.back_home()
+        log_say("Reset the environment", cfg.play_sounds)
+        reset_environment(robot, events, cfg.reset_time_s, cfg.fps)
     else:
         log_say("Warmup record", cfg.play_sounds)
         warmup_record(robot, events, enable_teleoperation, cfg.warmup_time_s, cfg.display_cameras, cfg.fps)

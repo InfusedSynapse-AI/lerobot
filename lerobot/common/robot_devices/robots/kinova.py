@@ -161,12 +161,12 @@ class KinovaRobot:
         obs_dict, action_dict = {}, {}
         obs_dict["observation.state"] = state
         obs_dict["observation.state_ros"] = state_ros
-        print(f"state:{state}, state_ros:{state_ros}")
+        # print(f"state:{state}, state_ros:{state_ros}")
         action_dict["action"] = action
         for name in self.cameras:
             obs_dict[f"observation.images.{name}"] = images[name]
-            save_img = cv2.cvtColor(obs_dict[f"observation.images.{name}"].numpy(), cv2.COLOR_RGB2BGR)
-            cv2.imwrite(f"/home/cuhk/quebinbin/workspace/projects/lerobot/{name}.png", save_img)
+            # save_img = cv2.cvtColor(obs_dict[f"observation.images.{name}"].numpy(), cv2.COLOR_RGB2BGR)
+            # cv2.imwrite(f"/home/cuhk/quebinbin/workspace/projects/lerobot/{name}.png", save_img)
     
         return obs_dict, action_dict
 
@@ -297,7 +297,7 @@ class KinovaRobot:
         
     def back_home(self):
         #home_positions = torch.tensor([359.996, 303.071, 359.996, 102.57, 0.001, 104.281, 270.048, 0.008]) #initial
-        home_positions = torch.tensor([354.6,  1.438,  123.799, 89.661, 353.994, 82.99, 279.9, 0.008]) # vertial
+        home_positions = torch.tensor([354.17,  357.815,  10.679, 90.142, 358.889, 90.289, 275.476, 0.008]) # vertial
         self.send_action(home_positions)
 
     def __del__(self):

@@ -43,20 +43,28 @@ def log_control_info(robot: Robot, dt_s, episode_index=None, frame_index=None, f
     log_dt("dt", dt_s)
 
     # TODO(aliberts): move robot-specific logs logic in robot.print_logs()
-    if not robot.robot_type.startswith(("stretch", "kinova")):
-        for name in robot.leader_arms:
-            key = f"read_leader_{name}_pos_dt_s"
+    if not robot.robot_type.startswith(("stretch")):
+        if robot.robot_type == "kinova":
+            key = "read_arm_pos_dt_s"
             if key in robot.logs:
-                log_dt("dtRlead", robot.logs[key])
+                log_dt("dtArm", robot.logs[key])
+            key = "read_gripper_pos_dt_s"
+            if key in robot.logs:
+                log_dt("dtGripper", robot.logs[key])
+        else:
+            for name in robot.leader_arms:
+                key = f"read_leader_{name}_pos_dt_s"
+                if key in robot.logs:
+                    log_dt("dtRlead", robot.logs[key])
 
-        for name in robot.follower_arms:
-            key = f"write_follower_{name}_goal_pos_dt_s"
-            if key in robot.logs:
-                log_dt("dtWfoll", robot.logs[key])
+            for name in robot.follower_arms:
+                key = f"write_follower_{name}_goal_pos_dt_s"
+                if key in robot.logs:
+                    log_dt("dtWfoll", robot.logs[key])
 
-            key = f"read_follower_{name}_pos_dt_s"
-            if key in robot.logs:
-                log_dt("dtRfoll", robot.logs[key])
+                key = f"read_follower_{name}_pos_dt_s"
+                if key in robot.logs:
+                    log_dt("dtRfoll", robot.logs[key])
 
         for name in robot.cameras:
             key = f"read_camera_{name}_dt_s"
@@ -280,7 +288,9 @@ def control_loop(
 def reset_environment(robot, events, reset_time_s, fps):
     # TODO(rcadene): refactor warmup_record and reset_environment
     if robot.robot_type in ["kinova"]:
+        time.sleep(5)
         robot.back_home()
+        time.sleep(2)
         return
     
     if has_method(robot, "teleop_safety_stop"):
