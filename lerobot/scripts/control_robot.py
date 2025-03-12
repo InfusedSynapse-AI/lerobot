@@ -265,11 +265,16 @@ def record(
     # 2. give times to the robot devices to connect and start synchronizing,
     # 3. place the cameras windows on screen
     enable_teleoperation = policy is None
-    log_say("Warmup record", cfg.play_sounds)
-    warmup_record(robot, events, enable_teleoperation, cfg.warmup_time_s, cfg.display_cameras, cfg.fps)
-    if has_method(robot, "teleop_safety_stop"):
-        robot.teleop_safety_stop()
+    if robot.robot_type in ["kinova"]:
+        log_say("set environment", cfg.play_sounds)
+        robot.back_home()
+    else:
+        log_say("Warmup record", cfg.play_sounds)
+        warmup_record(robot, events, enable_teleoperation, cfg.warmup_time_s, cfg.display_cameras, cfg.fps)
+        if has_method(robot, "teleop_safety_stop"):
+            robot.teleop_safety_stop()
     
+    time.sleep(5)
     recorded_episodes = 0
     while True:
         if recorded_episodes >= cfg.num_episodes:

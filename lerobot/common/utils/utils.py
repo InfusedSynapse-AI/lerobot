@@ -24,6 +24,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import requests
 
 
 def none_or_int(value):
@@ -192,12 +193,19 @@ def say(text, blocking=False):
     else:
         subprocess.Popen(cmd, creationflags=subprocess.CREATE_NO_WINDOW if system == "Windows" else 0)
 
+def send_message(text):
+    url='http://192.168.1.116:5000/message'
+    headers = {'Content-Type':'application/json'}
+    message = {'message': text}
+    response = requests.post(url, json=message, headers=headers)
+    print(response.json())
 
-def log_say(text, play_sounds, blocking=False):
-    logging.info(text)
+def log_say(text, play_sounds, blocking=True):
+    # logging.info(text)
 
-    if play_sounds:
-        say(text, blocking)
+    # if play_sounds:
+    #     say(text, blocking)
+    send_message(text)
 
 
 def get_channel_first_image_shape(image_shape: tuple) -> tuple:

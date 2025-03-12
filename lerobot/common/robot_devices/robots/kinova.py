@@ -296,7 +296,8 @@ class KinovaRobot:
         return action
         
     def back_home(self):
-        home_positions = torch.tensor([359.996, 303.071, 359.996, 102.57, 0.001, 104.281, 270.048, 0.008])
+        #home_positions = torch.tensor([359.996, 303.071, 359.996, 102.57, 0.001, 104.281, 270.048, 0.008]) #initial
+        home_positions = torch.tensor([354.6,  1.438,  123.799, 89.661, 353.994, 82.99, 279.9, 0.008]) # vertial
         self.send_action(home_positions)
 
     def __del__(self):

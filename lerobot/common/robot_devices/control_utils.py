@@ -279,17 +279,21 @@ def control_loop(
 
 def reset_environment(robot, events, reset_time_s, fps):
     # TODO(rcadene): refactor warmup_record and reset_environment
-    # if has_method(robot, "teleop_safety_stop"):
-    #     robot.teleop_safety_stop()
+    if robot.robot_type in ["kinova"]:
+        robot.back_home()
+        return
+    
+    if has_method(robot, "teleop_safety_stop"):
+        robot.teleop_safety_stop()
 
-    # control_loop(
-    #     robot=robot,
-    #     control_time_s=reset_time_s,
-    #     events=events,
-    #     fps=fps,
-    #     teleoperate=True,
-    # )
-    robot.back_home()
+    control_loop(
+        robot=robot,
+        control_time_s=reset_time_s,
+        events=events,
+        fps=fps,
+        teleoperate=True,
+    )
+    
 
 
 def stop_recording(robot, listener, display_cameras):
