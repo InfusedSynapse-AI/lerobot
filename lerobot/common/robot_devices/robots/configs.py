@@ -621,7 +621,8 @@ class KinovaRobotConfig(RobotConfig):
                 height=480,
             ),
             "cam_wrist": IntelRealSenseCameraConfig(
-                serial_number=243522071790,
+                # serial_number=243522071790,
+                serial_number=242322071749,
                 fps=30,
                 width=640,
                 height=480,
