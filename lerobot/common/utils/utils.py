@@ -200,7 +200,7 @@ def send_message(text):
     url='http://192.168.1.116:5000/message'
     headers = {'Content-Type':'application/json'}
     message = {'message': text}
-    response = requests.post(url, json=message, headers=headers)
+    response = requests.post(url, json=message, headers=headers, timeout=10)
     print(response.json())
 
 def log_say(text, play_sounds, blocking=True):
