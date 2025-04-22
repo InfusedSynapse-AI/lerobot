@@ -142,7 +142,9 @@ class PI0Config(PreTrainedConfig):
 
     @property
     def action_delta_indices(self) -> list:
-        return list(range(self.chunk_size))
+        # return list(range(self.chunk_size))
+        # todo remove: use only when action equals state
+        return list(i+1 for i in range(self.chunk_size))
 
     @property
     def reward_delta_indices(self) -> None:

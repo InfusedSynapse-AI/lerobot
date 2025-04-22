@@ -18,6 +18,7 @@ import logging
 import shutil
 from pathlib import Path
 from typing import Callable
+import random
 
 import datasets
 import numpy as np
@@ -722,6 +723,8 @@ class LeRobotDataset(torch.utils.data.Dataset):
         return self.num_frames
 
     def __getitem__(self, idx) -> dict:
+        # todo remove
+        if idx >= 252: idx = random.randint(0, 252)
         item = self.hf_dataset[idx]
         ep_idx = item["episode_index"].item()
 
