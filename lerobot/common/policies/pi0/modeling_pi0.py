@@ -144,9 +144,14 @@ def resize_with_pad(img, width, height, pad_value=-1):
 
     pad_height = max(0, int(height - resized_height))
     pad_width = max(0, int(width - resized_width))
+    pad_top = pad_height // 2
+    pad_bottom = pad_height - pad_top
+    pad_left = pad_width // 2
+    pad_right = pad_width - pad_left
 
     # pad on left and top of image
-    padded_img = F.pad(resized_img, (pad_width, 0, pad_height, 0), value=pad_value)
+    #padded_img = F.pad(resized_img, (pad_width, 0, pad_height, 0), value=pad_value)
+    padded_img = F.pad(resized_img, (pad_left, pad_right, pad_top, pad_bottom), value=pad_value)
     return padded_img
 
 
