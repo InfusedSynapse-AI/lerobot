@@ -160,7 +160,7 @@ class KinovaRobot:
         # Populate output dictionaries
         obs_dict, action_dict = {}, {}
         obs_dict["observation.state"] = state
-        obs_dict["observation.state_ros"] = state_ros
+        # obs_dict["observation.state_ros"] = state_ros
         # print(f"state:{state}, state_ros:{state_ros}")
         action_dict["action"] = action
         for name in self.cameras:
@@ -202,9 +202,9 @@ class KinovaRobot:
         obs_dict = {}
         gripper_position = torch.tensor([gripper_position])
         state = torch.cat((joint_states, gripper_position), dim = 0)
-        state_ros = torch.tensor(self.qpos)
+        # state_ros = torch.tensor(self.qpos)
         obs_dict["observation.state"] = state
-        obs_dict["observation.state_ros"] = state_ros
+        # obs_dict["observation.state_ros"] = state_ros
         for name in self.cameras:
             obs_dict[f"observation.images.{name}"] = images[name]
         return obs_dict

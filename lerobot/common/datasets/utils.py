@@ -401,8 +401,6 @@ def dataset_to_policy_features(features: dict[str, dict]) -> dict[str, PolicyFea
     # TODO(aliberts): Implement "type" in dataset features and simplify this
     policy_features = {}
     for key, ft in features.items():
-        # todo remove:
-        if key == "observation.state_ros": continue
         shape = ft["shape"]
         if ft["dtype"] in ["image", "video"]:
             type = FeatureType.VISUAL
