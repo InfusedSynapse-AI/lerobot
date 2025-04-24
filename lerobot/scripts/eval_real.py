@@ -24,6 +24,7 @@ for _ in range(inference_time_s * fps):
 
     # Read the follower state and access the frames from the cameras
     observation = robot.capture_observation()
+    observation["observation.images.empty_camera_0"] = torch.zeros_like(observation["observation.images.cam_wrist"])
 
     # Convert to pytorch format: channel first and float32 in [0,1]
     # with batch dimension
