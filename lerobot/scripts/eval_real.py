@@ -2,6 +2,7 @@ from lerobot.common.policies.pi0.modeling_pi0 import PI0Policy
 from lerobot.common.robot_devices.robots.configs import KinovaRobotConfig
 from lerobot.common.robot_devices.robots.kinova import KinovaRobot
 from lerobot.common.robot_devices.utils import busy_wait
+from lerobot.scripts.video_display import VideoDisplay
 import time
 import torch
 
@@ -18,13 +19,15 @@ robot_config = KinovaRobotConfig()
 robot = KinovaRobot(robot_config)
 robot.connect()
 robot.back_home()
+video_display = VideoDisplay(["observation.images.cam_exterior", "observation.images.cam_wrist"])
+video_display.on_episode_start()
 
 for _ in range(inference_time_s * fps):
     start_time = time.perf_counter()
 
     # Read the follower state and access the frames from the cameras
     observation = robot.capture_observation()
-    observation["observation.images.empty_camera_0"] = torch.zeros_like(observation["observation.images.cam_wrist"])
+    video_display.on_step(observation, observation["observation.state"])
 
     # Convert to pytorch format: channel first and float32 in [0,1]
     # with batch dimension
@@ -51,4 +54,5 @@ for _ in range(inference_time_s * fps):
     dt_s = time.perf_counter() - start_time
     busy_wait(1 / fps - dt_s)
 
+video_display.on_episode_end()
 robot.disconnect()
