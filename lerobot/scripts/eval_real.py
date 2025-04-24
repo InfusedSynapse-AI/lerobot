@@ -11,7 +11,7 @@ fps = 10
 device = "cuda"  # TODO: On Mac, use "mps" or "cpu"
 
 ckpt_path = "outputs/train/pi0_kinova_v1_only_action_expert/checkpoints/060000/pretrained_model"
-ckpt_path = "outputs/train/pi0_kinova_v1/checkpoints/060000/pretrained_model"
+ckpt_path = "outputs/train/pi0_kinova_v1_episode250_3imp_imgAug/checkpoints/030000/pretrained_model"
 policy = PI0Policy.from_pretrained(ckpt_path)
 policy.to(device)
 
