@@ -56,6 +56,7 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch import Tensor, nn
 from transformers import AutoTokenizer
+from torchvision.transforms import v2
 
 from lerobot.common.constants import ACTION, OBS_ROBOT
 from lerobot.common.policies.normalize import Normalize, Unnormalize
@@ -153,6 +154,21 @@ def resize_with_pad(img, width, height, pad_value=-1):
     #padded_img = F.pad(resized_img, (pad_width, 0, pad_height, 0), value=pad_value)
     padded_img = F.pad(resized_img, (pad_left, pad_right, pad_top, pad_bottom), value=pad_value)
     return padded_img
+
+def transform_images(img, key):
+    # img: [b, c, h, w]
+    transforms_list = []
+    if "wrist" not in key:
+        height, width = img.shape[2:4]
+        transforms_list += [
+            v2.RandomCrop(size=(int(height * 0.95), int(width * 0.95))),
+            v2.Resize(size=(height, width)),
+            v2.RandomRotation(degrees=(-5, 5))
+        ]
+    transforms_list += [v2.ColorJitter(brightness=0.3, contrast=0.4, saturation=0.5, hue=0.1)]
+    transforms = v2.Compose(transforms_list)
+    img = transforms(img)
+    return img
 
 
 def pad_vector(vector, new_dim):
@@ -283,7 +299,7 @@ class PI0Policy(PreTrainedPolicy):
         # Action queue logic for n_action_steps > 1. When the action_queue is depleted, populate it by
         # querying the policy.
         if len(self._action_queue) == 0:
-            images, img_masks = self.prepare_images(batch)
+            images, img_masks = self.prepare_images(batch, train=False)
             state = self.prepare_state(batch)
             lang_tokens, lang_masks = self.prepare_language(batch)
 
@@ -339,8 +355,8 @@ class PI0Policy(PreTrainedPolicy):
         loss_dict["l2_loss"] = loss.item()
 
         return loss, loss_dict
-
-    def prepare_images(self, batch):
+    
+    def prepare_images(self, batch, train = True):
         """Apply Pi0 preprocessing to the images, like resizing to 224x224 and padding to keep aspect ratio, and
         convert pixel range from [0.0, 1.0] to [-1.0, 1.0] as requested by SigLIP.
         """
@@ -361,6 +377,10 @@ class PI0Policy(PreTrainedPolicy):
 
             if self.config.resize_imgs_with_padding is not None:
                 img = resize_with_pad(img, *self.config.resize_imgs_with_padding, pad_value=0)
+            
+            # consistent with openpi
+            if train:
+                img = transform_images(img, key)
 
             # Normalize from range [0,1] to [-1,1] as expacted by siglip
             img = img * 2.0 - 1.0
