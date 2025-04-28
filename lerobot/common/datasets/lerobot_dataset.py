@@ -515,6 +515,7 @@ class LeRobotDataset(torch.utils.data.Dataset):
         if self.delta_timestamps is not None:
             check_delta_timestamps(self.delta_timestamps, self.fps, self.tolerance_s)
             self.delta_indices = get_delta_indices(self.delta_timestamps, self.fps)
+            print("self.delta_indices:", self.delta_indices)
 
     def push_to_hub(
         self,
@@ -664,6 +665,13 @@ class LeRobotDataset(torch.utils.data.Dataset):
             return get_hf_features_from_features(self.features)
 
     def _get_query_indices(self, idx: int, ep_idx: int) -> tuple[dict[str, list[int | bool]]]:
+        # todo remove
+        if ep_idx >= 32 and ep_idx <= 113:
+            ep_idx -= 1
+        elif ep_idx >= 115 and ep_idx <= 123:
+            ep_idx -= 2
+        elif ep_idx >= 125:
+            ep_idx -= 3
         ep_start = self.episode_data_index["from"][ep_idx]
         ep_end = self.episode_data_index["to"][ep_idx]
         query_indices = {
@@ -723,8 +731,6 @@ class LeRobotDataset(torch.utils.data.Dataset):
         return self.num_frames
 
     def __getitem__(self, idx) -> dict:
-        # todo remove
-        if idx >= 252: idx = random.randint(0, 252)
         item = self.hf_dataset[idx]
         ep_idx = item["episode_index"].item()
 
